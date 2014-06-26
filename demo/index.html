@@ -1,19 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Color Categorizer DEMO</title>
+	<title></title>
 	<link rel="stylesheet" type="text/css" href="">
 	<script src="jquery.min.js"></script>
-	<script type="text/javascript" src="../jquery.color-categorizer.js"></script>
+	<script type="text/javascript" src="jquery.color-categorizer.js"></script>
 	<script type="text/javascript">
 		$(function() {
-			$('#image').colorCategorizer();
+			$('.image').colorCategorizer({
+				afterGetNear: function(e, target, data) {
+					console.log(data);
+				}
+			});
+			$('.image').each(function() {
+				$(this).click(function() {
+					console.log($(this).colorCategorizer('getNear'));
+				});
+			});
 		});
 	</script>
 </head>
 <body>
 
-	<img id="image" src="img/IMG_2455.JPG" />
+	<img class="image" src="img/IMG_2455.JPG" width="200" />
+	<img class="image" src="img/IMG_2813.JPG" width="200" />
+	<img class="image" src="img/IMG_2835.JPG" width="200" />
+	<img class="image" src="img/IMG_3026.JPG" width="200" />
+	<img class="image" src="img/IMG_3182.JPG" width="200" />
+	<img class="image" src="img/IMG_3292.JPG" width="200" />
+	<img class="image" src="img/IMG_3305.JPG" width="200" />
+	<img class="image" src="img/IMG_3420.JPG" width="200" />
+	<img class="image" src="img/IMG_5079.JPG" width="200" />
 
 </body>
 </html>

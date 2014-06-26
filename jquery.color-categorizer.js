@@ -22,8 +22,6 @@
 				
 				this.self = $(this);
 
-				console.log(this.self[0],this.self);
-
 				var data = this.self.data('colorCategorizer');
 
 				if (!data) {
@@ -34,7 +32,8 @@
 
 					this.opt = $.extend(true, {}, $.fn.colorCategorizer.defaults, options);
 
-					methods.getClosest.call(this);
+					methods._bind.call(this);
+					methods._getNearTrigger.call(this, '_afterGetNear.cc');
 
 				}
 
@@ -42,38 +41,88 @@
 
 		},
 
-		getClosest: function() {
+		_bind: function() {
 
-			var thisColors = this.opt.colors;
+			this.self.on('_afterGetNear.cc', function(e, data) {
 
-			var img = this.self.attr('src');
+				methods._afterGetNear.call(this, e, this.self, data);
 
-			var dominantRgb, palette;
+			});
+
+			this.self.on('_getNear.cc', function(e, data) {
+
+				console.log(data);
+				return data;
+
+			});
+
+		},
+
+		_getNearTrigger: function( eventName ) {
+
+			var that = this;
+
+			var thisColors = that.opt.colors;
+
+			var img = that.self.attr('src');
 
 			RGBaster.colors(img, function(colors) {
 
-				dominantRgb = colors.dominant;
-				palette = colors.palette;
+				var dominantRgb = colors.dominant;
+				var palette = colors.palette;
 
-				var dominantColor = dominantRgb.replace('rgb(', '');
-				dominantColor = dominantColor.replace(')', '');
-				dominantColor = dominantColor.split(',');
+				var dominantColor = dominantRgb.replace('rgb(', '')
+										.replace(')', '')
+										.split(',');
 
-				var distance = new Array();
+				var distance = new Object();
+				var minValue = Infinity;
+				var minIndex = "";
 
-				for (var i = 0; i < thisColors.length; i++) {
+				for (var i in thisColors) {
 					distance[i] = Math.sqrt( Math.pow( thisColors[i][0] - parseInt(dominantColor[0]), 2 ) + Math.pow( thisColors[i][1] - parseInt(dominantColor[1]), 2 ) + Math.pow( thisColors[i][2] - parseInt(dominantColor[2]), 2 ) );
+					if (minValue > distance[i]) {
+						minValue = distance[i];
+						minIndex = i;
+					}
 				}
 
-				console.log(distance);
+				var closestColor = thisColors[minIndex];
+				that.self.trigger(eventName, { closest: {  label: minIndex, color: closestColor, palette: palette } });
 
-				var minIndex = distance.indexOf( Math.min.apply(Math, distance) );
-				var minValue = Math.min.apply(Math, distance);
-				var closest = thisColors[minIndex];
+			}, 10);
 
-				console.log(closest);
+		},
 
-			}, 20);
+		_afterGetNear: function( e, target, data ) {
+
+			this.self.data('colorCategorizer')['closest'] = data;
+
+			if (this.opt.afterGetNear != undefined) {
+
+				return this.opt.afterGetNear(e, target, data);
+
+			} else {
+
+				this.self.after('<span style="background:rgb('+data['closest']['color'][0]+','+data['closest']['color'][1]+','+data['closest']['color'][2]+')">'+data['closest']['label']+'</span>');
+			
+			}
+
+		},
+
+		afterGetNear: function() {
+
+			this.each(function() {
+
+				methods._getNearTrigger.call(this, '_afterGetNear.cc');
+
+			});
+
+		},
+
+		getNear: function() {
+
+			return this.data('colorCategorizer')['closest'];
 
 		}
 
@@ -93,7 +142,25 @@
 
 	// default
 	$.fn.colorCategorizer.defaults = {
-		colors: [[0, 0, 0], [255, 255, 255], [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [255, 0, 255], [0, 255, 255]]
+		colors: {
+					'black'     : [0, 0, 0],
+					'white'     : [255, 255, 255],
+					'red'       : [255, 0, 0],
+					'green'     : [0, 255, 0],
+					'blue'      : [0, 0, 255],
+					'yellow'    : [255, 255, 0],
+					'magenta'   : [255, 0, 255],
+					'cyan'      : [0, 255, 255],
+					'skyblue'   : [135, 206, 235],
+					'pink'      : [255, 192, 203],
+					'lightgreen': [144, 238, 144],
+					'purple'    : [128, 0, 128],
+					'lightblue' : [173, 216, 230],
+					'orange'    : [255, 165, 0],
+					'brown'     : [165, 42, 42],
+					'cornsilk'  : [255, 248, 220]
+				},
+		afterGetNear: undefined // function
 	};
 
 })(jQuery);
